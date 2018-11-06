@@ -4666,21 +4666,48 @@ typedef OWSContact * (^OWSContactBlock)(YapDatabaseReadWriteTransaction *transac
 
     NSMutableArray<SignalAttachment *> *attachments = [NSMutableArray new];
     for (uint32_t i = 0; i < imageCount; i++) {
-        UIColor *imageColor = [UIColor colorWithRed:arc4random_uniform(256) / 255.f
-                                              green:arc4random_uniform(256) / 255.f
-                                               blue:arc4random_uniform(256) / 255.f
-                                              alpha:1.f];
-        UIImage *image = [UIImage imageWithColor:imageColor size:CGSizeMake(10.f, 10.f)];
-        OWSAssertDebug(image);
-        NSData *pngData = UIImagePNGRepresentation(image);
-        OWSAssertDebug(pngData);
-        NSString *filePath = [OWSFileSystem temporaryFilePathWithFileExtension:@"png"];
-        [pngData writeToFile:filePath atomically:YES];
-        OWSAssertDebug([NSFileManager.defaultManager fileExistsAtPath:filePath]);
-        DataSource *dataSource = [DataSourcePath dataSourceWithFilePath:filePath shouldDeleteOnDeallocation:YES];
-        SignalAttachment *attachment = [SignalAttachment attachmentWithDataSource:dataSource
-                                                                          dataUTI:(NSString *)kUTTypePNG
-                                                                     imageQuality:TSImageQualityOriginal];
+        SignalAttachment *attachment;
+        switch (arc4random_uniform(3)) {
+            case 0: {
+                UIColor *imageColor = [UIColor colorWithRed:arc4random_uniform(256) / 255.f
+                                                      green:arc4random_uniform(256) / 255.f
+                                                       blue:arc4random_uniform(256) / 255.f
+                                                      alpha:1.f];
+                UIImage *image = [UIImage imageWithColor:imageColor size:CGSizeMake(10.f, 10.f)];
+                OWSAssertDebug(image);
+                NSData *pngData = UIImagePNGRepresentation(image);
+                OWSAssertDebug(pngData);
+                NSString *filePath = [OWSFileSystem temporaryFilePathWithFileExtension:@"png"];
+                [pngData writeToFile:filePath atomically:YES];
+                OWSAssertDebug([NSFileManager.defaultManager fileExistsAtPath:filePath]);
+                DataSource *dataSource =
+                    [DataSourcePath dataSourceWithFilePath:filePath shouldDeleteOnDeallocation:YES];
+                attachment = [SignalAttachment attachmentWithDataSource:dataSource
+                                                                dataUTI:(NSString *)kUTTypePNG
+                                                           imageQuality:TSImageQualityOriginal];
+                break;
+            }
+            case 1: {
+                NSString *resourcePath = [[NSBundle bundleForClass:[self class]] resourcePath];
+                NSString *filePath = [resourcePath stringByAppendingPathComponent:@"demo-gif.gif"];
+                OWSAssertDebug([[NSFileManager defaultManager] fileExistsAtPath:filePath]);
+                DataSource *dataSource = [DataSourcePath dataSourceWithFilePath:filePath shouldDeleteOnDeallocation:NO];
+                attachment = [SignalAttachment attachmentWithDataSource:dataSource
+                                                                dataUTI:(NSString *)kUTTypeGIF
+                                                           imageQuality:TSImageQualityOriginal];
+                break;
+            }
+            case 2: {
+                NSString *resourcePath = [[NSBundle bundleForClass:[self class]] resourcePath];
+                NSString *filePath = [resourcePath stringByAppendingPathComponent:@"demo-mp4.mp4"];
+                OWSAssertDebug([[NSFileManager defaultManager] fileExistsAtPath:filePath]);
+                DataSource *dataSource = [DataSourcePath dataSourceWithFilePath:filePath shouldDeleteOnDeallocation:NO];
+                attachment = [SignalAttachment attachmentWithDataSource:dataSource
+                                                                dataUTI:(NSString *)kUTTypeMPEG4
+                                                           imageQuality:TSImageQualityOriginal];
+                break;
+            }
+        }
         [attachments addObject:attachment];
     }
 
